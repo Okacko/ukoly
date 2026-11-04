@@ -210,7 +210,19 @@ button.key { padding: 0; }
 .date-field .date-text { flex: 1; min-width: 0; }
 .date-field .icon-btn { width: 34px; height: 34px; border: 1px solid var(--line); flex: none; }
 .date-field .icon-btn svg { width: 18px; height: 18px; }
-.date-field .date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.cal-pop { position: absolute; z-index: 60; width: 252px; padding: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28); }
+.cal-pop button { border: none; background: none; cursor: pointer; color: var(--text); }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cal-title { font-weight: 600; font-size: 14px; }
+.cal-nav { width: 28px; height: 28px; border-radius: 6px; color: var(--muted); font-size: 18px; line-height: 1; }
+.cal-nav:hover { background: var(--hover); color: var(--text); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-wdh { text-align: center; font-size: 11px; color: var(--muted); padding: 2px 0; }
+.cal-day { height: 30px; border-radius: 6px; font-size: 13px; }
+.cal-day:hover { background: var(--hover); }
+.cal-day.today { outline: 1px solid var(--line); }
+.cal-day.sel { background: var(--accent); color: #fff; }
+.cal-empty { height: 30px; }
 
 .switch { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 13px; cursor: pointer; }
 .switch input { accent-color: var(--accent); width: 15px; height: 15px; }

@@ -137,6 +137,74 @@ function weekdayIndex(tok) {
   return -1;
 }
 
+// ---------- Vlastní kalendář (CZ, týden od pondělí) ----------
+const MONTHS_CZ = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+const WD_CZ = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+let calEl = null, calMonth = null;
+
+function onCalOutside(e) {
+  if (calEl && !calEl.contains(e.target) && !e.target.closest('[data-action="pick-date"]')) closeCalendar();
+}
+function onCalKey(e) { if (e.key === 'Escape') { e.stopPropagation(); closeCalendar(); } }
+function closeCalendar() {
+  if (calEl) { calEl.remove(); calEl = null; }
+  document.removeEventListener('click', onCalOutside, true);
+  document.removeEventListener('keydown', onCalKey, true);
+}
+
+function openCalendar(anchor, iso) {
+  closeCalendar();
+  const base = iso ? parseDate(iso) : new Date();
+  calMonth = new Date(base.getFullYear(), base.getMonth(), 1);
+  calEl = document.createElement('div');
+  calEl.className = 'cal-pop';
+  document.body.appendChild(calEl);
+  renderCalendar(iso);
+  const r = anchor.getBoundingClientRect();
+  calEl.style.top = (window.scrollY + r.bottom + 4) + 'px';
+  calEl.style.left = (window.scrollX + Math.max(8, Math.min(r.left, window.innerWidth - calEl.offsetWidth - 8))) + 'px';
+  setTimeout(() => {
+    document.addEventListener('click', onCalOutside, true);
+    document.addEventListener('keydown', onCalKey, true);
+  }, 0);
+}
+
+function renderCalendar(selIso) {
+  const y = calMonth.getFullYear(), m = calMonth.getMonth();
+  const startDow = (new Date(y, m, 1).getDay() + 6) % 7; // 0 = pondělí
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = dateStr(new Date());
+  let cells = '';
+  for (let i = 0; i < startDow; i++) cells += '<span class="cal-empty"></span>';
+  for (let d = 1; d <= days; d++) {
+    const iso = dateStr(new Date(y, m, d));
+    const cls = ['cal-day'];
+    if (iso === selIso) cls.push('sel');
+    if (iso === today) cls.push('today');
+    cells += `<button type="button" class="${cls.join(' ')}" data-cal-day="${iso}">${d}</button>`;
+  }
+  calEl.innerHTML = `
+    <div class="cal-head">
+      <button type="button" class="cal-nav" data-cal-nav="-1" aria-label="Předchozí měsíc">‹</button>
+      <span class="cal-title">${MONTHS_CZ[m]} ${y}</span>
+      <button type="button" class="cal-nav" data-cal-nav="1" aria-label="Další měsíc">›</button>
+    </div>
+    <div class="cal-grid">${WD_CZ.map((w) => `<span class="cal-wdh">${w}</span>`).join('')}</div>
+    <div class="cal-grid">${cells}</div>`;
+  calEl.querySelectorAll('[data-cal-nav]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + Number(b.dataset.calNav), 1);
+    renderCalendar(selIso);
+  }));
+  calEl.querySelectorAll('[data-cal-day]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const iso = b.dataset.calDay;
+    const dt = $('.date-text');
+    closeCalendar();
+    if (dt) { dt.value = fmtDMY(iso); dt.dispatchEvent(new Event('change', { bubbles: true })); }
+  }));
+}
+
 function dueInfo(t) {
   if (!t.due) return null;
   const today = dateStr(new Date());
@@ -391,6 +459,7 @@ function doneToggle() {
 }
 
 function renderDetail() {
+  closeCalendar();
   const el = $('#detail');
   const t = task(ui.taskId);
   if (!t) { el.innerHTML = ''; return; }
@@ -439,7 +508,6 @@ function renderDetail() {
         <span class="date-field">
           <input type="text" class="date-text" data-field="dueText" value="${t.due ? fmtDMY(t.due) : ''}" placeholder="DD/MM/RRRR" inputmode="numeric" autocomplete="off">
           <button type="button" class="icon-btn small" data-action="pick-date" aria-label="Vybrat z kalendáře" title="Vybrat z kalendáře"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></button>
-          <input type="date" class="date-native" data-field="due" value="${esc(t.due)}" tabindex="-1" aria-hidden="true">
         </span>
       </label>
       <label class="field"><span>Čas</span><input type="time" data-field="time" value="${esc(t.time)}" ${t.due ? '' : 'disabled'}></label>
@@ -762,11 +830,8 @@ const actions = {
   },
   'close-project'() { $('#project').close(); },
   'close-confirm'() { $('#confirm').close(); },
-  'pick-date'() {
-    const n = $('.date-native');
-    if (!n) return;
-    if (n.showPicker) { try { n.showPicker(); return; } catch (e) {} }
-    n.focus();
+  'pick-date'(el) {
+    openCalendar(el, (task(ui.taskId) || {}).due || '');
   },
   settings() { renderSettings(); $('#settings').showModal(); },
   'sync-signin'() {

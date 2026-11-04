@@ -23,7 +23,7 @@ Pak otevřít http://localhost:5173. V Edge/Chrome jde aplikace nainstalovat jak
 - konkrétní datum `!12.11.` (letos / příští výskyt) nebo `!12.11.2027`
 - volitelně čas na konci: `… HH:MM` (např. `!pondělí 9:00`)
 
-Termín jde změnit i dodatečně – stačí v detailu do názvu dopsat nový `!token` (třeba `!pozítří`) a po opuštění pole se datum přepíše. Datum v detailu se zadává/zobrazuje jako **DD/MM/RRRR**, vedle je tlačítko pro výběr z kalendáře.
+Termín jde změnit i dodatečně – stačí v detailu do názvu dopsat nový `!token` (třeba `!pozítří`) a po opuštění pole se datum přepíše. Datum v detailu se zadává/zobrazuje jako **DD/MM/RRRR**, vedle je tlačítko s vlastním **českým kalendářem** (týden od pondělí).
 
 JIRA task je volný text (např. `UL72 SMPOESB-123 Rozhraní ESB`). Po zadání adresy JIRA v Nastavení jsou JIRA klíče v textu odkazem do JIRA; odkaz do Confluence jde přidat přes `…` u JIRA tasku. Aplikace do JIRA/Confluence nic nezapisuje.
 

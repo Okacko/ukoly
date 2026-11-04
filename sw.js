@@ -1,5 +1,5 @@
 // Service worker: offline cache aplikace + kliknutí na notifikaci
-const CACHE = 'ukoly-v4';
+const CACHE = 'ukoly-v5';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'sync.js', 'vendor/supabase.min.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
