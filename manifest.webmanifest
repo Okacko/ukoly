@@ -1,0 +1,16 @@
+{
+  "name": "Úkoly",
+  "short_name": "Úkoly",
+  "description": "Pracovní úkoly podle projektů a JIRA tasků",
+  "lang": "cs",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbfbfa",
+  "theme_color": "#fbfbfa",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

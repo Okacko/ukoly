@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Úkoly</title>
+  <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#18191b" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Úkoly">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="nav" id="nav"></aside>
+    <main class="list" id="list"></main>
+    <section class="detail" id="detail"></section>
+  </div>
+  <div class="scrim" data-action="close-nav"></div>
+  <dialog class="settings" id="settings"></dialog>
+  <dialog class="settings" id="project"></dialog>
+  <dialog class="settings confirm-dialog" id="confirm"></dialog>
+  <script src="vendor/supabase.min.js"></script>
+  <script src="sync.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
