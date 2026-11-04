@@ -4,6 +4,8 @@
 const STORE_KEY = 'ukoly.v1';
 const DAYS = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so'];
 const DAYS_ASCII = ['ne', 'po', 'ut', 'st', 'ct', 'pa', 'so'];
+const DAYS_FULL = ['neděle', 'pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota'];
+const DAYS_FULL_ASCII = ['nedele', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota'];
 // JIRA klíče kdekoli v názvu (např. „UL72 SMPOESB-123 Migrace“) se zobrazí jako odkaz
 const JIRA_KEYS = /\b[A-Z][A-Z0-9]+-\d+\b/g;
 
@@ -108,6 +110,33 @@ function parseDate(s) {
   return new Date(y, m - 1, d);
 }
 
+// 'YYYY-MM-DD' -> 'DD/MM/YYYY' (pro zobrazení)
+function fmtDMY(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+// 'DD/MM/YYYY' (i s . nebo -, rok nepovinný) -> 'YYYY-MM-DD' nebo '' když je to nesmysl
+function parseDMY(s) {
+  const m = (s || '').trim().match(/^(\d{1,2})[./-](\d{1,2})(?:[./-](\d{2}|\d{4}))?$/);
+  if (!m) return '';
+  const day = Number(m[1]), mon = Number(m[2]);
+  let year = m[3] ? Number(m[3]) : new Date().getFullYear();
+  if (m[3] && m[3].length === 2) year += 2000;
+  if (mon < 1 || mon > 12 || day < 1 || day > 31) return '';
+  const d = new Date(year, mon - 1, day);
+  if (d.getFullYear() !== year || d.getMonth() !== mon - 1 || d.getDate() !== day) return '';
+  return dateStr(d);
+}
+
+function weekdayIndex(tok) {
+  let i = DAYS.indexOf(tok); if (i >= 0) return i;
+  i = DAYS_ASCII.indexOf(tok); if (i >= 0) return i;
+  i = DAYS_FULL.indexOf(tok); if (i >= 0) return i;
+  i = DAYS_FULL_ASCII.indexOf(tok); if (i >= 0) return i;
+  return -1;
+}
+
 function dueInfo(t) {
   if (!t.due) return null;
   const today = dateStr(new Date());
@@ -136,10 +165,10 @@ function parseQuick(text) {
   const now = new Date();
   let due = '';
   if (token === 'dnes') due = dateStr(now);
-  else if (token === 'zítra' || token === 'zitra') due = dateStr(new Date(now.getTime() + 864e5));
-  else if (DAYS.includes(token) || DAYS_ASCII.includes(token)) {
-    const target = DAYS.includes(token) ? DAYS.indexOf(token) : DAYS_ASCII.indexOf(token);
-    const diff = (target - now.getDay() + 7) % 7;
+  else if (token === 'zítra' || token === 'zitra') due = dateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
+  else if (token === 'pozítří' || token === 'pozitri') due = dateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2));
+  else if (weekdayIndex(token) >= 0) {
+    const diff = (weekdayIndex(token) - now.getDay() + 7) % 7;
     due = dateStr(new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff));
   } else {
     const dm = token.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})?$/);
@@ -406,7 +435,13 @@ function renderDetail() {
       </div>` : ''}
 
     <div class="field-row">
-      <label class="field"><span>Termín</span><input type="date" data-field="due" value="${esc(t.due)}"></label>
+      <label class="field"><span>Termín</span>
+        <span class="date-field">
+          <input type="text" class="date-text" data-field="dueText" value="${t.due ? fmtDMY(t.due) : ''}" placeholder="DD/MM/RRRR" inputmode="numeric" autocomplete="off">
+          <button type="button" class="icon-btn small" data-action="pick-date" aria-label="Vybrat z kalendáře" title="Vybrat z kalendáře"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"></rect><path d="M16 2v4M8 2v4M3 10h18"></path></svg></button>
+          <input type="date" class="date-native" data-field="due" value="${esc(t.due)}" tabindex="-1" aria-hidden="true">
+        </span>
+      </label>
       <label class="field"><span>Čas</span><input type="time" data-field="time" value="${esc(t.time)}" ${t.due ? '' : 'disabled'}></label>
     </div>
     <label class="switch ${t.due ? '' : 'disabled'}">
@@ -727,6 +762,12 @@ const actions = {
   },
   'close-project'() { $('#project').close(); },
   'close-confirm'() { $('#confirm').close(); },
+  'pick-date'() {
+    const n = $('.date-native');
+    if (!n) return;
+    if (n.showPicker) { try { n.showPicker(); return; } catch (e) {} }
+    n.focus();
+  },
   settings() { renderSettings(); $('#settings').showModal(); },
   'sync-signin'() {
     const mail = ($('#sync-email') || {}).value, pw = ($('#sync-pw') || {}).value;
@@ -997,7 +1038,20 @@ document.addEventListener('change', (e) => {
   }
   const t = task(ui.taskId);
   const f = el.dataset.field;
-  if (!t || !f || f === 'title' || f === 'notes') return;
+  if (!t || !f || f === 'notes') return;
+  if (f === 'title') {
+    // Po úpravě názvu znovu rozpoznej termín z koncového !tokenu (např. !pozítří, !pondělí)
+    const q = parseQuick(t.title);
+    if (q.due) { t.title = q.title; t.due = q.due; if (q.time) t.time = q.time; t.notified = false; save(); render(); checkReminders(); }
+    return;
+  }
+  if (f === 'dueText') {
+    t.due = parseDMY(el.value) || '';
+    if (!t.due) { t.time = ''; t.remind = false; }
+    t.notified = false;
+    save(); render(); checkReminders();
+    return;
+  }
   if (f === 'remind') t.remind = el.checked;
   else if (f === 'projectId') { t.projectId = el.value || null; if (jira(t.jiraId) && jira(t.jiraId).projectId !== t.projectId) t.jiraId = null; }
   else if (f === 'jiraId') t.jiraId = el.value || null;

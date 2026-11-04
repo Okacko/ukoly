@@ -206,6 +206,11 @@ button.key { padding: 0; }
 .field input:disabled { opacity: 0.5; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .field-row .field { margin-bottom: 8px; }
+.date-field { position: relative; display: flex; align-items: center; gap: 6px; }
+.date-field .date-text { flex: 1; min-width: 0; }
+.date-field .icon-btn { width: 34px; height: 34px; border: 1px solid var(--line); flex: none; }
+.date-field .icon-btn svg { width: 18px; height: 18px; }
+.date-field .date-native { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
 .switch { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-size: 13px; cursor: pointer; }
 .switch input { accent-color: var(--accent); width: 15px; height: 15px; }
